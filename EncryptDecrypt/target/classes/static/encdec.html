@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Matrix Effect</title>
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: linear-gradient(45deg, #004d00, #001a00);
+        height: 100%;
+        font-size: 62.5%;
+      }
+
+      canvas {
+        display: block;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        position: sticky;
+        padding: 0 7%;
+        margin: 2rem 7%;
+        border-radius: 30rem;
+        top: 0;
+        background-color: rgba(128, 128, 128, 0.8);
+        z-index: 1000;
+        justify-content: center;
+      }
+
+      .navbar {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+      }
+
+      .navbar a {
+        color: rgb(230, 255, 168);
+        text-decoration: none;
+        font-size: 40px;
+        font-weight: bold;
+      }
+
+      #matrix {
+        margin-top: -5rem;
+        position: absolute;
+        top: 50px;
+        left: 0;
+        width: 100%;
+        height: calc(100%);
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        z-index: 1001;
+      }
+      h1 {
+        text-align: center;
+        z-index: 1001;
+      }
+      h2 {
+        font-size: 12px;
+      }
+      .container {
+        color: #fff;
+        position: relative;
+        max-width: 620px;
+        margin: 4rem auto;
+        background-color: rgba(128, 128, 128, 0.9);
+        text-align: center;
+        z-index: 1001;
+        border-radius: 2rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        font-size: 1rem;
+      }
+
+      label {
+        text-align: center;
+        font-size: 1.5rem;
+      }
+      img {
+        max-width: 100%;
+        height: auto;
+        z-index: 1001;
+      }
+      input {
+        padding: 10px;
+        width: 80%;
+        z-index: 1001;
+        margin: 10px 0;
+      }
+      button {
+        color: #fff;
+        padding: 10px 20px;
+        z-index: 1001;
+        cursor: pointer;
+        border-radius: 10rem;
+        background-color: rgba(128, 128, 128, 0.5);
+      }
+
+      button:hover {
+        background-color: rgba(18, 17, 17, 0.7);
+      }
+      textarea {
+        z-index: 1001;
+        width: 99%;
+        height: 8rem;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="matrix"></canvas>
+    <header class="header">
+      <nav class="navbar">
+        <a href="#">GÖRSEL ŞİFRELEME</a>
+      </nav>
+    </header>
+    <div class="container">
+      <div class="section" id="encryption-section">
+        <h2>Görseli Şifrele</h2>
+        <label for="imageFile">Bir Görsel Seçin:</label>
+        <input type="file" id="imageFile" accept="image/*" />
+        <button onclick="encryptImage()">Şifrele</button>
+        <p id="encrypt-status" style="color: black; display: none">
+          Şifreleme başarılı! .txt dosyası indiriliyor...
+        </p>
+      </div>
+      <div class="section" id="decryption-section">
+        <h2>Şifreli .txt Dosyasını Yükleyin ve Deşifre Edin</h2>
+        <label for="decryptFile">Şifreli .txt Dosyasını Seçin:</label>
+        <input type="file" id="decryptFile" />
+        <button onclick="decryptTxt()">Deşifre Et</button>
+        <h3>Deşifre Edilen Görsel</h3>
+        <img
+          id="decryptedImage"
+          src=""
+          alt="Deşifre Edilen Görsel"
+          class="preview"
+          style="display: none"
+        />
+        <button
+          onclick="downloadDecryptedImage()"
+          style="display: none"
+          id="downloadButton"
+        >
+          Deşifre Edilen Görseli İndir
+        </button>
+      </div>
+    </div>
+    <script>
+      const canvas = document.getElementById("matrix");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const fontSize = 14;
+      const columns = canvas.width / fontSize;
+
+      // Dizilerle sütunları oluştur
+      const drops = Array(Math.floor(columns)).fill(0);
+
+      let speed = 50;
+      let lastDrawTime = 0;
+
+      function draw(timestamp) {
+        if (timestamp - lastDrawTime > speed) {
+          lastDrawTime = timestamp;
+
+          ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          ctx.fillStyle = "#0f0";
+          ctx.font = `${fontSize}px monospace`;
+
+          for (let i = 0; i < drops.length; i++) {
+            const text = Math.random() > 0.5 ? "1" : "0";
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+              drops[i] = 0;
+            }
+
+            drops[i] += 0.5;
+          }
+        }
+
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener("resize", () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+      draw(0);
+      // Görseli şifreleme işlemi
+      function encryptImage() {
+        var fileInput = document.getElementById("imageFile");
+        if (!fileInput.files.length) {
+          alert("Lütfen bir görsel seçin!");
+          return;
+        }
+
+        var formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/encryptdecrypt/encrypt", true);
+        xhr.responseType = "blob";
+
+        xhr.onload = function () {
+          if (xhr.status === 200) {
+            var blob = xhr.response;
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = "encrypted.txt";
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.getElementById("encrypt-status").style.display = "block";
+          } else {
+            alert("Şifreleme işlemi başarısız oldu.");
+          }
+        };
+
+        xhr.send(formData);
+      }
+
+      // Şifreli .txt dosyasını yükleyerek deşifreleme işlemi
+      function decryptTxt() {
+        var fileInput = document.getElementById("decryptFile");
+        if (!fileInput.files.length) {
+          alert("Lütfen bir .txt dosyası seçin!");
+          return;
+        }
+
+        var formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/encryptdecrypt/decrypt", true);
+        xhr.responseType = "blob";
+
+        xhr.onload = function () {
+          if (xhr.status === 200) {
+            var img = document.getElementById("decryptedImage");
+            img.src = URL.createObjectURL(xhr.response);
+            img.style.display = "block";
+
+            var downloadButton = document.getElementById("downloadButton");
+            downloadButton.style.display = "inline-block";
+            downloadButton.onclick = function () {
+              var url = URL.createObjectURL(xhr.response);
+              var a = document.createElement("a");
+              a.href = url;
+              a.download = "decrypted_image.png";
+              document.body.appendChild(a);
+              a.click();
+              URL.revokeObjectURL(url);
+            };
+          } else {
+            alert("Deşifre edilen görsel alınamadı.");
+          }
+        };
+
+        xhr.send(formData);
+      }
+    </script>
+  </body>
+</html>
